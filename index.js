@@ -7,5 +7,10 @@ module.exports.index = function (id, revision, done) {
     s3.getObject({
         Bucket: bucket,
         Key: id + '/' + revision + '/' + id + '/index.html'
-    }, done);
+    }, function (err, o) {
+        if (err) {
+            return done(err);
+        }
+        done(null, String(o.Body));
+    });
 };
