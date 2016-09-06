@@ -1,16 +1,12 @@
-var utils = require('utils');
+var log = require('logger')('serand');
+var nconf = require('nconf');
+var request = require('request');
 
-var bucket = process.env.AWS_S3_CDN_BUCKET || 'cdn.serandives.com'
+var cdn = nconf.get('CDN');
 
 module.exports.index = function (id, revision, done) {
-    var s3 = utils.s3();
-    s3.getObject({
-        Bucket: bucket,
-        Key: id + '/' + revision + '/' + id + '/index.html'
-    }, function (err, o) {
-        if (err) {
-            return done(err);
-        }
-        done(null, String(o.Body));
+    var url = cdn + '/' + id + '/' + revision + '/' + id + '/index.html';
+    request(url, function (err, res, body) {
+        done(err, body);
     });
 };
