@@ -10,3 +10,10 @@ module.exports.index = function (id, revision, done) {
         done(err, body);
     });
 };
+
+var Error = function (o) {
+    this.status = o.status;
+    this.data = o.data;
+};
+
+exports.Error = Error;
