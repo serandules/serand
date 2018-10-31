@@ -1,6 +1,7 @@
 var log = require('logger')('serand');
 var nconf = require('nconf');
 var request = require('request');
+var _ = require('lodash');
 
 var utils = require('utils');
 
@@ -12,6 +13,13 @@ var space = utils.space();
 var cdn = nconf.get('CDN');
 
 module.exports.index = function (id, revision, done) {
+  var url = cdn + '/' + id + '/' + revision + '/' + id + '/index.html';
+  request(url, function (err, res, body) {
+    done(err, body);
+  });
+};
+
+module.exports.configs = function (names, done) {
   Clients.findOne({name: space}).exec(function (err, client) {
     if (err) {
       return done(err);
@@ -19,24 +27,28 @@ module.exports.index = function (id, revision, done) {
     if (!client) {
       return done('No client with name %s can be found.', space);
     }
-    Configs.findOne({user: client.user, name: 'boot'}, function (err, boot) {
+    Configs.find({
+      user: client.user,
+      name: {
+        $in: names
+      }
+    }, {name: 1, value: 1}, function (err, configs) {
       if (err) {
         return done(err);
       }
-      if (!boot) {
-        return done('No boot config cannot be found');
-      }
-      var url = cdn + '/' + id + '/' + revision + '/' + id + '/index.html';
-      request(url, function (err, res, body) {
-        done(err, boot.id, body);
+      var o = {};
+      configs.forEach(function (config) {
+        config = config.toJSON();
+        o[config.name] = config.value;
       });
+      done(null, o);
     });
   });
 };
 
 var Error = function (o) {
-    this.status = o.status;
-    this.data = o.data;
+  this.status = o.status;
+  this.data = o.data;
 };
 
 exports.Error = Error;
