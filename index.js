@@ -10,7 +10,7 @@ var Clients = require('model-clients');
 
 var space = utils.space();
 
-var cdn = nconf.get('CDN');
+var cdn = nconf.get('CDN_STATICS');
 
 module.exports.index = function (id, revision, done) {
   var url = cdn + '/' + id + '/' + revision + '/' + id + '/index.html';
