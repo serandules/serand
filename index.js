@@ -1,12 +1,10 @@
 var log = require('logger')('serand');
 var nconf = require('nconf');
 var request = require('request');
+var mongoose = require('mongoose');
 var _ = require('lodash');
 
 var utils = require('utils');
-
-var Configs = require('model-configs');
-var Clients = require('model-clients');
 
 var space = utils.space();
 
@@ -20,6 +18,7 @@ module.exports.index = function (id, revision, done) {
 };
 
 module.exports.configs = function (names, done) {
+  var Clients = mongoose.model('clients');
   Clients.findOne({name: space}).exec(function (err, client) {
     if (err) {
       return done(err);
@@ -27,6 +26,7 @@ module.exports.configs = function (names, done) {
     if (!client) {
       return done('No client with name %s can be found.', space);
     }
+    var Configs = mongoose.model('configs');
     Configs.find({
       user: client.user,
       name: {
