@@ -45,10 +45,3 @@ module.exports.configs = function (names, done) {
     });
   });
 };
-
-var Error = function (o) {
-  this.status = o.status;
-  this.data = o.data;
-};
-
-exports.Error = Error;
