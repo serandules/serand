@@ -6,7 +6,7 @@ var _ = require('lodash');
 
 var utils = require('utils');
 
-var space = utils.space();
+var domain = utils.domain();
 
 var cdn = nconf.get('CDN_STATICS');
 
@@ -19,12 +19,12 @@ module.exports.index = function (id, revision, done) {
 
 module.exports.configs = function (names, done) {
   var Clients = mongoose.model('clients');
-  Clients.findOne({name: space}).exec(function (err, client) {
+  Clients.findOne({name: domain}).exec(function (err, client) {
     if (err) {
       return done(err);
     }
     if (!client) {
-      return done('No client with name %s can be found.', space);
+      return done('No client with name %s can be found.', domain);
     }
     var Configs = mongoose.model('configs');
     Configs.find({
