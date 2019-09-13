@@ -12,6 +12,7 @@ var cdn = nconf.get('CDN_STATICS');
 
 module.exports.index = function (id, revision, done) {
   var url = cdn + '/' + id + '/' + revision + '/' + id + '/index.html';
+  log.info('index:url', 'id:%s, url:%s', id, url);
   request(url, function (err, res, body) {
     done(err, body);
   });
