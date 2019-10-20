@@ -18,43 +18,69 @@ exports.index = function (id, revision, done) {
 };
 
 exports.boots = function (names, done) {
-  exports.configs(['boot', 'groups', 'menus', 'aliases'].concat(names), function (err, configs) {
+  names.values = ['boot', 'groups', 'menus', 'aliases'].concat(names.values || []);
+  names.ids = ['vehicle-makes'].concat(names.ids || []);
+  exports.configs(names, function (err, o) {
     if (err) {
       return done(err);
     }
-    exports.configs(Object.keys(configs.menus), function (err, menus) {
+    var menus = o.values.menus;
+    exports.configs({values: Object.keys(menus)}, function (err, menus) {
       if (err) {
         return done(err);
       }
-      done(null, _.assign(configs, menus));
+      _.assign(o.values, menus.values);
+      done(null, o);
     });
   });
 };
 
-exports.configs = function (names, done) {
-  var o = {};
+exports.configs = function (o, done) {
+  var allValues = {};
+  var allIds = {};
+  var values = o.values || [];
+  var ids = o.ids || [];
+  var valuesById = _.keyBy(values);
+  var names = values.concat(ids);
+
+  var index = function (name, o) {
+    if (valuesById[name]) {
+      allValues[name] = o.value;
+      return;
+    }
+    allIds[name] = o.id;
+  };
+
   async.each(names, function (name, eachDone) {
-    utils.client(function (err, client) {
-      if (err) {
-        return done(err);
+    utils.cached('configs:' + name, function (err, o) {
+      if (err) return eachDone(err);
+      if (o) {
+        index(name, JSON.parse(o));
+        return eachDone();
       }
-      utils.cached('configs:' + client.user + ':' + name, function (err, value) {
-        if (err) return eachDone(err);
-        if (value) {
-          o[name] = JSON.parse(value);
-          return eachDone();
+      var Configs = mongoose.model('configs');
+      Configs.findOne({
+        name: name
+      }, function (err, config) {
+        if (err) {
+          return eachDone(err);
         }
-        var Configs = mongoose.model('configs');
-        Configs.findOne({
-          user: client.user,
-          name: name
-        }, {value: 1}, function (err, config) {
+        config = utils.json(config);
+        utils.group('public', function (err, pub) {
           if (err) {
             return eachDone(err);
           }
-          config = utils.json(config);
-          o[name] = config.value;
-          eachDone();
+          utils.group('anonymous', function (err, anon) {
+            if (err) {
+              return eachDone(err);
+            }
+            var permitted = utils.permitted({groups: [pub.id, anon.id]}, config, 'read');
+            if (!permitted) {
+              return eachDone();
+            }
+            index(name, config);
+            eachDone();
+          });
         });
       });
     });
@@ -62,6 +88,6 @@ exports.configs = function (names, done) {
     if (err) {
       return done(err);
     }
-    done(null, o);
+    done(null, {ids: allIds, values: allValues});
   });
 };
