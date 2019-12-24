@@ -18,7 +18,7 @@ exports.index = function (id, revision, done) {
 };
 
 exports.boots = function (names, done) {
-  names.values = ['boot', 'groups', 'menus', 'aliases'].concat(names.values || []);
+  names.values = ['boot', 'users', 'groups', 'menus', 'aliases'].concat(names.values || []);
   names.ids = ['vehicle-makes'].concat(names.ids || []);
   exports.configs(names, function (err, o) {
     if (err) {
